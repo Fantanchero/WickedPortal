@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Captive Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      background-color: #2A9D9D;
+      background-size: cover;
+      font-family: 'Roboto', 'Arial', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .logo-wrapper {
+      width: 100%;
+      display: block;
+      line-height: 0;
+      padding: 30px 20px 0;
+      text-align: center;
+      background: #ffffff;
+    }
+    .logo-wrapper img {
+      width: 100%;
+      max-width: 300px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      object-fit: contain;
+    }
+
+    .content {
+      padding: 15px 26px 30px 26px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h3 {
+      margin: 10px 0 30px 0;
+      font-size: 1.4rem;
+      color: #333;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .login-form {
+      width: 100%;
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .login-label {
+      font-size: .9rem;
+      color: #555;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: #fff;
+      outline: none;
+      transition: border-color .18s, box-shadow .18s, background .18s;
+    }
+
+    .login-input:focus {
+      border-color: #00847c;
+      box-shadow: 0 0 0 2px rgba(0,132,124,0.1);
+    }
+
+    .login-input.invalid {
+      border-color: #e53935;
+      box-shadow: 0 0 0 2px rgba(229,57,53,0.08);
+    }
+
+    .login-input.valid {
+      border-color: #2e7d32;
+      box-shadow: 0 0 0 2px rgba(46,125,50,0.08);
+    }
+
+    .error-text {
+      margin: 6px 2px 0;
+      font-size: .85rem;
+      color: #c62828;
+      min-height: 1.1em;
+    }
+
+    .ceibal-btn {
+      width: 180px;
+      background: #00847c;
+      color: #fff;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 30px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background .2s, opacity .2s;
+      margin: 10px auto 0;
+      display: block;
+    }
+
+    .ceibal-btn:hover { background: #007069; }
+    .ceibal-btn:active { background: #006058; }
+    .ceibal-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      background: #007c75;
+    }
+
+    @media (max-width: 480px) {
+      .login-container { max-width: 96vw; }
+      .content { padding: 18px 16px 22px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo-wrapper">
+      <img src="logo.jpg" alt="Logo" onerror="this.style.display='none'">
+    </div>
+
+    <div class="content">
+      <h3>Inicio de sesión</h3>
+
+      <form id="f" class="login-form" method="post" action="/login" autocomplete="off" novalidate>
+        <div>
+          <label class="login-label" for="nombre">Nombre y apellido</label>
+          <input
+            class="login-input"
+            id="nombre"
+            name="nombre"
+            type="text"
+            required
+            autocomplete="name"
+            autocapitalize="words"
+            inputmode="text"
+            placeholder="Ej: Juan Pérez"
+            maxlength="100"
+            aria-describedby="nombre-error"
+            aria-invalid="false"
+          >
+          <p id="nombre-error" class="error-text" aria-live="polite"></p>
+        </div>
+
+        <div>
+          <label class="login-label" for="email">Email</label>
+          <input
+            class="login-input"
+            id="email"
+            name="email"
+            type="email"
+            required
+            autocomplete="email"
+            placeholder="Ingrese su email"
+            aria-describedby="email-error"
+            aria-invalid="false"
+          >
+          <p id="email-error" class="error-text" aria-live="polite"></p>
+        </div>
+
+        <button id="b" class="ceibal-btn" type="submit" disabled>Conectar</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var form = document.getElementById('f');
+      var submitBtn = document.getElementById('b');
+      var nombre = document.getElementById('nombre');
+      var email = document.getElementById('email');
+      var nombreErr = document.getElementById('nombre-error');
+      var emailErr = document.getElementById('email-error');
+
+      // Si querés limitar a dominios específicos, listalos acá. Si está vacío, se permite cualquier dominio sintácticamente válido.
+      var ALLOWED_DOMAINS = []; // Ejemplo: ['ceibal.edu.uy', 'gmail.com', 'outlook.com']
+
+      function normalizeSpaces(str) {
+        return (str || '').replace(/\s+/g, ' ').trim();
+      }
+
+      // Letras con tildes/ñ permitidas para nombres
+      var nameTokenRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[-'][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/;
+
+      function validateNombre(value) {
+        var raw = value || '';
+        var normalized = normalizeSpaces(raw);
+        if (!normalized) {
+          return { valid: false, msg: 'Ingresá tu nombre y apellido.' };
+        }
+        var parts = normalized.split(' ');
+        if (parts.length < 2) {
+          return { valid: false, msg: 'Ingresá nombre y apellido (al menos dos palabras).' };
+        }
+        for (var i = 0; i < parts.length; i++) {
+          if (!nameTokenRegex.test(parts[i])) {
+            return {
+              valid: false,
+              msg: 'Usá solo letras, espacios, guiones o apóstrofes (sin números ni símbolos).'
+            };
+          }
+        }
+        return { valid: true, value: normalized };
+      }
+
+      // Validación estricta de email en frontend
+      function validateEmailStrict(value) {
+        var v = (value || '').trim();
+        if (!v) return { valid: false, msg: 'El email es obligatorio.' };
+
+        var atParts = v.split('@');
+        if (atParts.length !== 2) {
+          return { valid: false, msg: 'El email debe contener exactamente un @.' };
+        }
+        var local = atParts[0];
+        var domain = atParts[1].toLowerCase();
+
+        // Local-part
+        if (local.length < 1 || local.length > 64) {
+          return { valid: false, msg: 'La parte antes de @ tiene longitud inválida.' };
+        }
+        var localRegex = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/;
+        if (!localRegex.test(local) || local.startsWith('.') || local.endsWith('.') || local.includes('..')) {
+          return { valid: false, msg: 'Caracteres inválidos en la parte antes de @ o puntos consecutivos.' };
+        }
+
+        // Dominio
+        if (domain.length < 3 || domain.length > 255) {
+          return { valid: false, msg: 'Dominio inválido.' };
+        }
+        if (domain.endsWith('.')) {
+          return { valid: false, msg: 'El dominio no puede terminar en punto.' };
+        }
+        var labels = domain.split('.');
+        if (labels.length < 2) {
+          // Evita asd@d y similares
+          return { valid: false, msg: 'El dominio debe incluir un TLD (ej: .com, .uy).' };
+        }
+        var labelRegex = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
+        for (var i = 0; i < labels.length - 1; i++) {
+          if (!labelRegex.test(labels[i])) {
+            return { valid: false, msg: 'Etiqueta de dominio inválida.' };
+          }
+        }
+        // TLD: solo letras, al menos 2 caracteres (ej: com, uy). Permite también punycode "xn--..."
+        var tld = labels[labels.length - 1];
+        var tldValid = /^[A-Za-z]{2,24}$/.test(tld) || /^xn--[A-Za-z0-9-]{2,22}$/.test(tld);
+        if (!tldValid) {
+          return { valid: false, msg: 'TLD inválido (ej: .com, .uy).' };
+        }
+
+        // Lista blanca opcional
+        if (ALLOWED_DOMAINS.length > 0) {
+          var isAllowed = ALLOWED_DOMAINS.some(function (d) { return d.toLowerCase() === domain; });
+          if (!isAllowed) {
+            return { valid: false, msg: 'Dominio no permitido.' };
+          }
+        }
+
+        return { valid: true, value: local + '@' + domain };
+      }
+
+      function setFieldState(input, errorEl, state) {
+        if (state.valid) {
+          input.classList.remove('invalid');
+          input.classList.add('valid');
+          input.setAttribute('aria-invalid', 'false');
+          errorEl.textContent = '';
+        } else {
+          input.classList.remove('valid');
+          input.classList.add('invalid');
+          input.setAttribute('aria-invalid', 'true');
+          errorEl.textContent = state.msg || 'Campo inválido.';
+        }
+      }
+
+      function updateSubmit() {
+        var n = validateNombre(nombre.value);
+        var e = validateEmailStrict(email.value);
+        submitBtn.disabled = !(n.valid && e.valid);
+      }
+
+      // Validación en tiempo real
+      nombre.addEventListener('input', function () {
+        var res = validateNombre(nombre.value);
+        setFieldState(nombre, nombreErr, res);
+        updateSubmit();
+      });
+
+      email.addEventListener('input', function () {
+        var res = validateEmailStrict(email.value);
+        setFieldState(email, emailErr, res);
+        updateSubmit();
+      });
+
+      // Normalizar al salir del campo
+      nombre.addEventListener('blur', function () {
+        var res = validateNombre(nombre.value);
+        if (res.value) nombre.value = res.value;
+        setFieldState(nombre, nombreErr, res);
+        updateSubmit();
+      });
+
+      email.addEventListener('blur', function () {
+        var res = validateEmailStrict(email.value);
+        if (res.value) email.value = res.value;
+        setFieldState(email, emailErr, res);
+        updateSubmit();
+      });
+
+      // Envío del formulario solo si todo es válido (frontend)
+      form.addEventListener('submit', function (e) {
+        var n = validateNombre(nombre.value);
+        var eRes = validateEmailStrict(email.value);
+
+        setFieldState(nombre, nombreErr, n);
+        setFieldState(email, emailErr, eRes);
+        updateSubmit();
+
+        if (!(n.valid && eRes.valid)) {
+          e.preventDefault();
+          (n.valid ? email : nombre).focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Conectando...';
+      });
+
+      // Estado inicial
+      setFieldState(nombre, nombreErr, { valid: false, msg: '' });
+      setFieldState(email, emailErr, { valid: false, msg: '' });
+      updateSubmit();
+    })();
+  </script>
+</body>
+</html>
